@@ -30,8 +30,13 @@ import Dashboard1 from "./screens/Dashboard1.js";
 import Dashboard2 from "./screens/Dashboard2.js";
 import Profile from "./screens/Profile.js";
 import Activity from "./screens/Activity.js";
+import SalesData from "./screens/SalesData.js";
+import Alerts from "./screens/Alerts.js";
+import Reports from "./screens/Reports.js";
+import Audit from "./screens/Audit.js";
+import Settings from "./screens/Settings.js";
+import MapDataEntry from "./screens/MapDataEntry.js";
 import { adjustColors, jwt, colorSuggestions } from "./utils/index.js";
-import Map from "./components/Map.js";
 import useThemeState from "./use-theme-state.js";
 
 const buildTheme = (mode) => {
@@ -105,7 +110,12 @@ const App = () => {
 								<Route path="dashboard2" element={<Protected c={<Dashboard2 />} />} />
 								<Route path="profile" element={<Protected c={<Profile />} />} />
 								<Route path="activity" element={<AdminOnly c={<Activity />} />} />
-								<Route path="map" element={<Protected c={<Map />} />} />
+								<Route path="sales-data" element={<Protected c={<SalesData />} />} />
+								<Route path="alerts" element={<Protected c={<Alerts />} />} />
+								<Route path="reports" element={<Protected c={<Reports />} />} />
+								<Route path="audit" element={<AdminOnly c={<Audit />} />} />
+								<Route path="settings" element={<Protected c={<Settings />} />} />
+								<Route path="map" element={<Protected c={<MapDataEntry />} />} />
 								<Route path="*" element={<NotFound />} />
 							</Routes>
 						</main>

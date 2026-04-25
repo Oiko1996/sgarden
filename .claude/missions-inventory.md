@@ -3,7 +3,7 @@
 > Live state for the SGarden hackathon. Updated at every Phase transition by the Mission Protocol in `CLAUDE.md`.
 > Status legend: **TODO** · **RED** · **GREEN** · **CYCLOPT-CLEAN** · **DONE** · **BLOCKED**
 
-**Last updated:** 2026-04-25 12:45 (after parallel easy-tier batch — M2–M8 DONE)
+**Last updated:** 2026-04-25 13:13 (after parallel medium-tier batch — M9–M17 DONE, 29/29 cypress, 1270 pts)
 
 **Environment notes:**
 - Cypress 13.17.0 was upgraded to 14.5.4 (`package.json`) because the 13.x Electron launcher misbehaves on this macOS (Darwin 25). Root cause is actually `ELECTRON_RUN_AS_NODE=1` set by VS Code shell — every cypress invocation must use `env -u ELECTRON_RUN_AS_NODE npx cypress run …` (or unset the var).
@@ -21,21 +21,21 @@
 | M6  | Notification Center                | easy   | 50  | header (global)                  | DONE   | 3/3 cypress; zustand use-notification-state + Popover; SAST 0, violations 0/0/0 |
 | M7  | Dashboard Filter Persistence       | easy   | 50  | /dashboard1                      | DONE   | 2/2 cypress; use-filter-persistence localStorage hook; SAST 0, violations 0/0/0. Hot-fix: DatePicker `slotProps`→`renderInput` for x-date-pickers v5 |
 | M8  | Breadcrumb Navigation              | easy   | 60  | global (authenticated)           | DONE   | 2/2 cypress; breadcrumb-bar testid on Paper + Home prepend + last crumb Typography; SAST 0, violations 0/0/0 |
-| M9  | Sales Records CRUD                 | medium | 150 | /sales-data (new, inferred)      | TODO   |       |
-| M10 | Threshold Alerts System            | medium | 150 | /alerts (new, inferred)          | TODO   |       |
-| M11 | In-App Notes & Annotations         | medium | 120 | /dashboard1                      | TODO   |       |
-| M12 | Data Comparison Mode               | medium | 150 | /dashboard1                      | TODO   |       |
-| M13 | Multi-Language Support / i18n      | medium | 120 | header (global)                  | TODO   |       |
-| M14 | Map-Based Data Entry               | medium | 180 | /map (new)                       | TODO   |       |
-| M15 | Report Builder                     | medium | 180 | /reports (new, inferred)         | TODO   |       |
-| M16 | Audit Trail                        | medium | 120 | /audit (new, inferred)           | TODO   |       |
-| M17 | User Preferences & Settings        | medium | 100 | /settings (new, inferred)        | TODO   |       |
+| M9  | Sales Records CRUD                 | medium | 150 | /sales-data (new)                | DONE   | 4/4 cypress (final merge run); SalesRecord model + REST CRUD + SalesData screen; SAST 0, violations 0/0/0 (2 deferred-FP `_req`) |
+| M10 | Threshold Alerts System            | medium | 150 | /alerts (new)                    | DONE   | 3/3 cypress; AlertRule model + REST + Alerts screen; wires `useNotificationState.addNotification` on submit (M10↔M6); SAST 0, violations 0/0/0 (2 deferred-FP) |
+| M11 | In-App Notes & Annotations         | medium | 120 | /dashboard1                      | DONE   | 3/3 cypress; Note model + REST (per-user, owner-scoped delete); Drawer in Dashboard1; SWR; SAST 0, violations 0/0/0 |
+| M12 | Data Comparison Mode               | medium | 150 | /dashboard1                      | DONE   | 3/3 cypress; pure frontend; halfIndex split of existing Dashboard1 chart data into previous/current period panels; SAST 0, violations 0/0/0 |
+| M13 | Multi-Language Support / i18n      | medium | 120 | header (global)                  | DONE   | 3/3 cypress; foundation built (use-i18n-state.js + utils/i18n.js with en/el dicts); LanguageIcon Menu in Header; SAST 0, violations 0/0/0 |
+| M14 | Map-Based Data Entry               | medium | 180 | /map (route swapped)             | DONE   | 4/4 cypress; MapDataEntry model + REST + MapDataEntry screen w/ 5-region grid; /map route swapped from Map.js to MapDataEntry; SAST 0, violations 0/0/0 (2 deferred-FP) |
+| M15 | Report Builder                     | medium | 180 | /reports (new)                   | DONE   | 3/3 cypress; Report model + REST + Reports screen w/ collapsible wizard; SAST 0, violations 0/0/0 (2 deferred-FP) |
+| M16 | Audit Trail                        | medium | 120 | /audit (new, admin-only)         | DONE   | 3/3 cypress; REUSES existing M5 Activity model + GET /api/activity (no new model, no backend patch); new Audit screen only; SAST 0, violations 0/0/0 |
+| M17 | User Preferences & Settings        | medium | 100 | /settings (new)                  | DONE   | 3/3 cypress; UserSettings model + GET/PUT /api/user-settings/me + Settings screen; settings-nav-link in Header (not Sidebar); SAST 0, violations 0/0/0 (2 deferred-FP) |
 | M18 | Real-Time Collaborative Dashboard  | hard   | 250 | /dashboard                       | TODO   |       |
 | M19 | Advanced Search & Global Filter    | hard   | 200 | header (global)                  | TODO   |       |
 | M20 | CSV/JSON Data Import               | hard   | 200 | /import (new, inferred)          | TODO   |       |
 
-**Totals:** 20 missions · 8 DONE · 460 / 2380 pts earned (19.3%)
-(easy 460 ✅ + medium 1270 + hard 650)
+**Totals:** 20 missions · 17 DONE · 1730 / 2380 pts earned (72.7%)
+(easy 460 ✅ + medium 1270 ✅ + hard 650)
 
 ## Foundations (cross-cutting infrastructure)
 
@@ -44,8 +44,8 @@ Build BEFORE the consumer mission. Each foundation gets its own row; status mirr
 | Foundation                              | Used by                              | Status | Files                              |
 |-----------------------------------------|--------------------------------------|--------|------------------------------------|
 | ThemeProvider (light/dark, MUI palette) | M2, M17                              | DONE   | frontend/src/use-theme-state.js, frontend/src/index.js (buildTheme) |
-| i18n provider + EN/EL translations      | M13, M17                             | TODO   |                                    |
-| Sidebar items registry                  | M5, M9, M10, M15, M16, M20           | TODO   | (M5 added one-off admin link inline; registry pattern still TBD) |
+| i18n provider + EN/EL translations      | M13, M17                             | DONE   | frontend/src/use-i18n-state.js, frontend/src/utils/i18n.js |
+| Sidebar items registry                  | M5, M9, M10, M15, M16, M20           | PARTIAL| Inline-Button pattern repeated 5× (activity-admin, sales-data, alerts, reports, audit-admin). No abstraction; fine for hackathon scope. |
 | Notification store (zustand)            | M6, M10                              | DONE   | frontend/src/use-notification-state.js (persist), Header Popover |
 | Activity/Audit logger (backend + UI)    | M5, M16                              | DONE   | backend/src/models/activity.js, backend/src/routes/activity.js, frontend/src/screens/Activity.js |
 | Bookmarks store (localStorage or DB)    | M3                                   | DONE   | frontend/src/use-bookmarks-state.js (persist) |

@@ -9,6 +9,7 @@ import {
 	DarkMode as DarkModeIcon,
 	Notifications as NotificationsIcon,
 	Home as HomeIcon,
+	Language as LanguageIcon,
 } from "@mui/icons-material";
 import { makeStyles } from "@mui/styles";
 import { Image } from "mui-image";
@@ -18,6 +19,7 @@ import logo from "../assets/images/logo.png";
 import { ReactComponent as LogoutIcon } from "../assets/images/logout.svg";
 import useThemeState from "../use-theme-state.js";
 import useNotificationState from "../use-notification-state.js";
+import useI18nState from "../use-i18n-state.js";
 
 const useStyles = makeStyles((theme) => ({
 	grow: {
@@ -111,6 +113,17 @@ const Header = ({ isAuthenticated }) => {
 	const isNotificationOpen = Boolean(notificationAnchorEl);
 	const handleNotificationOpen = (event) => setNotificationAnchorEl(event.currentTarget);
 	const handleNotificationClose = () => setNotificationAnchorEl(null);
+
+	const lang = useI18nState((state) => state.lang);
+	const setLang = useI18nState((state) => state.setLang);
+	const [langAnchorEl, setLangAnchorEl] = useState(null);
+	const isLangMenuOpen = Boolean(langAnchorEl);
+	const openLangMenu = (event) => setLangAnchorEl(event.currentTarget);
+	const closeLangMenu = () => setLangAnchorEl(null);
+	const pickLanguage = (next) => {
+		setLang(next);
+		closeLangMenu();
+	};
 
 	const handleMobileMenuClose = () => setMobileMoreAnchorEl(null);
 	const handleMobileMenuOpen = (event) => setMobileMoreAnchorEl(event.currentTarget);
@@ -263,6 +276,53 @@ const Header = ({ isAuthenticated }) => {
 								>
 									{"Profile"}
 								</Button>
+								<Button
+									data-testid="settings-nav-link"
+									sx={{ textTransform: "none", color: "secondary.main", fontWeight: "bold", mx: 1 }}
+									onClick={() => navigate("/settings")}
+								>
+									{"Settings"}
+								</Button>
+								<IconButton
+									color="primary"
+									aria-label="Change language"
+									data-testid="language-switcher"
+									onClick={openLangMenu}
+								>
+									<LanguageIcon />
+								</IconButton>
+								<Typography
+									data-testid="language-active"
+									variant="body2"
+									color="secondary.main"
+									fontWeight="bold"
+									sx={{ minWidth: "24px", textAlign: "center", mr: 0.5 }}
+								>
+									{(lang || "en").toUpperCase()}
+								</Typography>
+								<Menu
+									keepMounted
+									anchorEl={langAnchorEl}
+									open={isLangMenuOpen}
+									onClose={closeLangMenu}
+									anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+									transformOrigin={{ vertical: "top", horizontal: "right" }}
+								>
+									<MenuItem
+										data-testid="language-option-en"
+										selected={lang === "en"}
+										onClick={() => pickLanguage("en")}
+									>
+										{"EN — English"}
+									</MenuItem>
+									<MenuItem
+										data-testid="language-option-el"
+										selected={lang === "el"}
+										onClick={() => pickLanguage("el")}
+									>
+										{"EL — Ελληνικά"}
+									</MenuItem>
+								</Menu>
 								<IconButton
 									color="primary"
 									aria-label="Toggle dark mode"
