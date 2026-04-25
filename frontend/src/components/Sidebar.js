@@ -123,6 +123,33 @@ const Sidebar = ({ isSmall: sidebarIsSmall }) => {
 					ind={ind}
 				/>
 			))}
+			{isAdmin && (
+				<Button
+					data-testid="sidebar-activity-link"
+					sx={{
+						width: "100%",
+						display: "flex",
+						flexDirection: "row",
+						justifyContent: "flex-start",
+						padding: isSmall ? "8px 0" : "8px 40px 8px 16px",
+						minWidth: "30px",
+						mt: isSmall ? "10px" : 0,
+					}}
+					onClick={() => navigate("/activity")}
+				>
+					<Typography
+						align="center"
+						color="white.main"
+						fontSize="medium"
+						ml={isSmall ? 0 : 1}
+						display="flex"
+						alignItems="center"
+						sx={{ textTransform: "capitalize" }}
+					>
+						{isSmall ? "A" : "Activity Log"}
+					</Typography>
+				</Button>
+			)}
 		</div>
 	);
 };

@@ -1,9 +1,14 @@
 import { useEffect, useState } from "react";
-import { Grid, Typography, Box } from "@mui/material";
+import { Grid, Typography, Box, IconButton, Button } from "@mui/material";
+import BookmarkIcon from "@mui/icons-material/Bookmark";
+import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
+import DownloadIcon from "@mui/icons-material/Download";
 
 import Dropdown from "../components/Dropdown.js";
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
+import useBookmarksState from "../use-bookmarks-state.js";
+import { downloadCsv } from "../utils/csv-export.js";
 
 const availableRegions = ["Thessaloniki", "Athens", "Patras"];
 const generateRandomData = (minimum = 0, maximum = 100) => {
@@ -23,6 +28,16 @@ const formatNumber = (number, symbol = "", showSign = true) => {
 const Dashboard = () => {
     const [selectedRegion, setSelectedRegion] = useState("Thessaloniki");
     const [data, setData] = useState({});
+    const bookmarks = useBookmarksState((state) => state.bookmarks);
+    const toggleBookmark = useBookmarksState((state) => state.toggle);
+    const isBookmarked = bookmarks.includes("dashboard");
+
+    const handleExportWeeklySales = () => {
+        const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+        const sales = data?.weeklySales || [];
+        const rows = days.map((day, index) => [day, sales[index] ?? ""]);
+        downloadCsv("weekly-sales.csv", rows, ["Day", "Sales"]);
+    };
 
     useEffect(() => {
         const newData = {
@@ -48,9 +63,29 @@ const Dashboard = () => {
 
     return (
         <Grid container py={2} flexDirection="column">
-            <Typography variant="h4" gutterBottom color="white.main">
-                Overview
-            </Typography>
+            <Box display="flex" alignItems="center" gap={1} mb={1}>
+                <Typography variant="h4" gutterBottom color="white.main" sx={{ mb: 0 }}>
+                    Overview
+                </Typography>
+                <IconButton
+                    data-testid="bookmark-toggle-dashboard"
+                    aria-label="Toggle bookmark for dashboard"
+                    onClick={() => toggleBookmark("dashboard")}
+                    sx={{ color: "white" }}
+                >
+                    {isBookmarked ? <BookmarkIcon /> : <BookmarkBorderIcon />}
+                </IconButton>
+                <Button
+                    data-testid="export-csv-weekly-sales"
+                    variant="outlined"
+                    size="small"
+                    startIcon={<DownloadIcon />}
+                    onClick={handleExportWeeklySales}
+                    sx={{ color: "white", borderColor: "white", ml: 1 }}
+                >
+                    {"Export Weekly Sales"}
+                </Button>
+            </Box>
 
             <Grid item style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", marginBottom: "20px" }}>
                 <Typography variant="body1" style={{ marginRight: "10px" }} color="white.main">Region:</Typography>

@@ -7,6 +7,86 @@ const router = express.Router({ mergeParams: true });
 
 router.get("/decode/", (req, res) => res.json(res.locals.user));
 
+router.get("/me", async (req, res) => {
+	try {
+		const userId = res.locals.user._id;
+		const user = await User.findById(userId).select("+email");
+		if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+		return res.json({
+			success: true,
+			profile: {
+				id: user._id,
+				username: user.username,
+				email: user.email,
+				role: user.role,
+				createdAt: user.createdAt,
+				lastActiveAt: user.lastActiveAt,
+			},
+		});
+	} catch {
+		return res.status(500).json({ success: false, message: "Failed to load profile" });
+	}
+});
+
+router.put("/me", async (req, res) => {
+	try {
+		const userId = res.locals.user._id;
+		const { email: nextEmail } = req.body || {};
+		const updates = {};
+		if (typeof nextEmail === "string" && nextEmail.trim()) {
+			updates.email = nextEmail.trim().toLowerCase();
+		}
+
+		const user = await User.findByIdAndUpdate(userId, updates, { new: true });
+		if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+		return res.json({
+			success: true,
+			profile: {
+				id: user._id,
+				username: user.username,
+				email: user.email,
+				role: user.role,
+				createdAt: user.createdAt,
+				lastActiveAt: user.lastActiveAt,
+			},
+		});
+	} catch {
+		return res.status(500).json({ success: false, message: "Failed to update profile" });
+	}
+});
+
+router.post("/change-password", async (req, res) => {
+	try {
+		const userId = res.locals.user._id;
+		const { currentPassword, newPassword, confirmPassword } = req.body || {};
+
+		if (!currentPassword || !newPassword || !confirmPassword) {
+			return res.status(400).json({ success: false, message: "All password fields are required" });
+		}
+		if (newPassword !== confirmPassword) {
+			return res.status(400).json({ success: false, message: "New passwords do not match" });
+		}
+		if (String(newPassword).length < validations.minPassword) {
+			return res.status(400).json({ success: false, message: `Password must be at least ${validations.minPassword} characters` });
+		}
+
+		const user = await User.findById(userId).select("+password");
+		if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+		if (!user.comparePassword(currentPassword)) {
+			return res.status(401).json({ success: false, message: "Current password is incorrect" });
+		}
+
+		user.password = newPassword;
+		await user.save();
+		return res.json({ success: true, message: "Password updated" });
+	} catch {
+		return res.status(500).json({ success: false, message: "Failed to change password" });
+	}
+});
+
 router.get("/attempt-auth/", (req, res) => res.json({ ok: true }));
 
 router.get("/", async (req, res) => {

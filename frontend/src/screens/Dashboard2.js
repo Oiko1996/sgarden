@@ -1,16 +1,62 @@
 import { useEffect, useState } from "react";
-import { Grid, Typography } from "@mui/material";
+import { Grid, Typography, Box, IconButton, Button } from "@mui/material";
+import BookmarkIcon from "@mui/icons-material/Bookmark";
+import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
+import DownloadIcon from "@mui/icons-material/Download";
 import Dropdown from "../components/Dropdown.js";
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
 
 import { getData } from "../api/index.js";
+import useBookmarksState from "../use-bookmarks-state.js";
+import { downloadCsv } from "../utils/csv-export.js";
 
 const availableRegions = ["Thessaloniki", "Athens", "Patras"];
+
+const monthLabels = ["January", "February", "March", "April", "May", "June"];
 
 const Dashboard = () => {
     const [selectedRegion, setSelectedRegion] = useState("Thessaloniki");
     const [data, setData] = useState({ quarterlySalesDistribution: {}, budgetVsActual: {}, timePlot: {} });
+    const bookmarks = useBookmarksState((state) => state.bookmarks);
+    const toggleBookmark = useBookmarksState((state) => state.toggle);
+    const isBookmarked = bookmarks.includes("dashboard2");
+
+    const handleExportQuarterlySales = () => {
+        const distribution = data?.quarterlySalesDistribution || {};
+        const quarters = ["Q1", "Q2", "Q3"];
+        const rows = [];
+        for (const quarter of quarters) {
+            const values = distribution[quarter] || [];
+            for (const value of values) rows.push([quarter, value]);
+        }
+
+        downloadCsv("quarterly-sales.csv", rows, ["Quarter", "Value"]);
+    };
+
+    const handleExportBudgetVsActual = () => {
+        const budgetMap = data?.budgetVsActual || {};
+        const entries = Object.values(budgetMap);
+        const rows = monthLabels.map((month, index) => {
+            const entry = entries[index] || {};
+            return [month, entry.budget ?? "", entry.actual ?? "", entry.forecast ?? ""];
+        });
+        downloadCsv("budget-vs-actual.csv", rows, ["Month", "Budget", "Actual", "Forecast"]);
+    };
+
+    const handleExportPerformance = () => {
+        const timePlot = data?.timePlot || {};
+        const projected = timePlot.projected || [];
+        const actual = timePlot.actual || [];
+        const historical = timePlot.historicalAvg || [];
+        const length = Math.max(projected.length, actual.length, historical.length);
+        const rows = [];
+        for (let index = 0; index < length; index++) {
+            rows.push([index + 1, projected[index] ?? "", actual[index] ?? "", historical[index] ?? ""]);
+        }
+
+        downloadCsv("performance.csv", rows, ["Period", "Projected", "Actual", "HistoricalAvg"]);
+    };
 
     useEffect(() => {
         getData().then((tempData) => {
@@ -24,9 +70,19 @@ const Dashboard = () => {
 
     return (
         <Grid container py={2} flexDirection="column">
-            <Typography variant="h4" gutterBottom color="white.main">
-                Insights
-            </Typography>
+            <Box display="flex" alignItems="center" gap={1} mb={1}>
+                <Typography variant="h4" gutterBottom color="white.main" sx={{ mb: 0 }}>
+                    Insights
+                </Typography>
+                <IconButton
+                    data-testid="bookmark-toggle-dashboard2"
+                    aria-label="Toggle bookmark for dashboard2"
+                    onClick={() => toggleBookmark("dashboard2")}
+                    sx={{ color: "white" }}
+                >
+                    {isBookmarked ? <BookmarkIcon /> : <BookmarkBorderIcon />}
+                </IconButton>
+            </Box>
 
             <Grid item style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", marginBottom: "20px" }}>
                 <Typography variant="body1" style={{ marginRight: "10px" }} color="white.main">Region:</Typography>
@@ -40,6 +96,17 @@ const Dashboard = () => {
             <Grid container spacing={2}>
                 <Grid item sm={12} md={6}>
                     <Card title="Quarterly Sales Distribution">
+                        <Box display="flex" justifyContent="flex-end" mb={1}>
+                            <Button
+                                data-testid="export-csv-quarterly-sales"
+                                variant="outlined"
+                                size="small"
+                                startIcon={<DownloadIcon />}
+                                onClick={handleExportQuarterlySales}
+                            >
+                                {"Export CSV"}
+                            </Button>
+                        </Box>
                         <Plot
                             data={[
                                 {
@@ -70,6 +137,17 @@ const Dashboard = () => {
                 </Grid>
                 <Grid item sm={12} md={6}>
                     <Card title="Budget vs Actual Spending">
+                        <Box display="flex" justifyContent="flex-end" mb={1}>
+                            <Button
+                                data-testid="export-csv-budget-vs-actual"
+                                variant="outlined"
+                                size="small"
+                                startIcon={<DownloadIcon />}
+                                onClick={handleExportBudgetVsActual}
+                            >
+                                {"Export CSV"}
+                            </Button>
+                        </Box>
                         <Plot
                             data={[
                                 {
@@ -103,6 +181,17 @@ const Dashboard = () => {
                 </Grid>
                 <Grid item sm={12}>
                     <Card title="Performance Over Time">
+                        <Box display="flex" justifyContent="flex-end" mb={1}>
+                            <Button
+                                data-testid="export-csv-performance"
+                                variant="outlined"
+                                size="small"
+                                startIcon={<DownloadIcon />}
+                                onClick={handleExportPerformance}
+                            >
+                                {"Export CSV"}
+                            </Button>
+                        </Box>
                         <Plot
                             data={[
                                 {

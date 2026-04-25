@@ -70,3 +70,7 @@ export const removeUser = (id) => api.post("user/delete", { id });
 export const getUsersData = () => api.get("user");
 export const submitUserRole = (userId, role) => api.post("user/role", { id: userId, role });
 export const getData = () => api.get("data");
+export const getActivity = (params) => api.get("activity", params);
+export const getMyProfile = () => api.get("user/me");
+export const updateMyProfile = (payload) => api.put("user/me", payload);
+export const changePassword = (currentPassword, newPassword, confirmPassword) => api.post("user/change-password", { currentPassword, newPassword, confirmPassword });
