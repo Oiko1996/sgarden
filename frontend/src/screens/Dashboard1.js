@@ -1,17 +1,28 @@
 import { useEffect, useState } from "react";
-import { Grid, Typography, Box, Button, TextField } from "@mui/material";
+import { Grid, Typography, Box, Button, MenuItem, Select, Chip, IconButton, TextField } from "@mui/material";
+import BookmarkIcon from "@mui/icons-material/Bookmark";
+import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
+import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import { DatePicker as MuiDatePicker } from "@mui/x-date-pickers/DatePicker";
+import dayjs from "dayjs";
 import Dropdown from "../components/Dropdown.js";
 import Card from "../components/Card.js";
 import Plot from "../components/Plot.js";
 import DatePicker from "../components/DatePicker.js";
 import Map from "../components/Map.js";
+import useBookmarksState from "../use-bookmarks-state.js";
+import useFilterPersistence from "../use-filter-persistence.js";
 
 import colors from "../_colors.scss";
 
 const availableRegions = ["Thessaloniki", "Athens", "Patras"];
 const availableMetrics = ["Revenue", "Expenses", "Profit", "Growth Rate"];
+const filterMetricOptions = ["Revenue", "Customers", "Subscriptions"];
 const generateRandomData = (min = 0, max = 10) => Math.random() * (max - min) + min;
 const randomDate = () => new Date(new Date(2020, 0, 1).getTime() + Math.random() * (new Date().getTime() - new Date(2020, 0, 1).getTime()));
+
+const toDayjs = (value) => (value ? dayjs(value) : null);
+const toIso = (value) => (value && dayjs(value).isValid() ? dayjs(value).toISOString() : null);
 
 const Dashboard = () => {
     const [selectedRegion, setSelectedRegion] = useState("Thessaloniki");
@@ -20,6 +31,20 @@ const Dashboard = () => {
     const [toDate, setToDate] = useState(new Date());
     const [months, setMonths] = useState([]);
     const [data, setData] = useState({ keyMetric: { date: randomDate(), value: generateRandomData(0, 100) }, revenue: [], expenses: [], profit: [], growthRate: [] });
+
+    const bookmarks = useBookmarksState((state) => state.bookmarks);
+    const toggleBookmark = useBookmarksState((state) => state.toggle);
+    const isBookmarked = bookmarks.includes("dashboard1");
+
+    const [filterMetric, setFilterMetric, resetFilterMetric] = useFilterPersistence("sgarden-filter-metric", "Revenue");
+    const [filterDateFrom, setFilterDateFrom, resetFilterDateFrom] = useFilterPersistence("sgarden-filter-date-from", null);
+    const [filterDateTo, setFilterDateTo, resetFilterDateTo] = useFilterPersistence("sgarden-filter-date-to", null);
+
+    const handleResetFilters = () => {
+        resetFilterMetric();
+        resetFilterDateFrom();
+        resetFilterDateTo();
+    };
 
     const changePlotData = (fromD, toD) => {
         if (fromD && toD) {
@@ -60,9 +85,81 @@ const Dashboard = () => {
 
     return (
         <Grid container py={2} flexDirection="column">
-            <Typography variant="h4" gutterBottom color="white.main">
-                Analytics
-            </Typography>
+            <Box display="flex" alignItems="center" gap={1} mb={1} flexWrap="wrap">
+                <Typography variant="h4" gutterBottom color="white.main" sx={{ mb: 0 }}>
+                    Analytics
+                </Typography>
+                <IconButton
+                    data-testid="bookmark-toggle-dashboard1"
+                    aria-label="Toggle bookmark for dashboard1"
+                    onClick={() => toggleBookmark("dashboard1")}
+                    sx={{ color: "white" }}
+                >
+                    {isBookmarked ? <BookmarkIcon /> : <BookmarkBorderIcon />}
+                </IconButton>
+                {isBookmarked && (
+                    <Chip
+                        data-testid="bookmark-active-dashboard1"
+                        label="Bookmarked"
+                        color="primary"
+                        size="small"
+                        icon={<BookmarkIcon />}
+                    />
+                )}
+            </Box>
+
+            <Box
+                display="flex"
+                alignItems="center"
+                gap={2}
+                mb={2}
+                p={2}
+                flexWrap="wrap"
+                sx={{ backgroundColor: "rgba(255,255,255,0.06)", borderRadius: 1 }}
+            >
+                <Typography variant="subtitle2" color="white.main">{"Filters:"}</Typography>
+                <Box minWidth={160}>
+                    <Select
+                        data-testid="filter-metric"
+                        value={filterMetric || ""}
+                        onChange={(event) => setFilterMetric(event.target.value)}
+                        size="small"
+                        displayEmpty
+                        fullWidth
+                        sx={{ backgroundColor: "white", borderRadius: 1 }}
+                    >
+                        {filterMetricOptions.map((option) => (
+                            <MenuItem key={option} value={option}>{option}</MenuItem>
+                        ))}
+                    </Select>
+                </Box>
+                <Box data-testid="filter-date-from" minWidth={180}>
+                    <MuiDatePicker
+                        label="From"
+                        value={toDayjs(filterDateFrom)}
+                        onChange={(value) => setFilterDateFrom(toIso(value))}
+                        renderInput={(params) => <TextField {...params} size="small" sx={{ backgroundColor: "white", borderRadius: 1 }} />}
+                    />
+                </Box>
+                <Box data-testid="filter-date-to" minWidth={180}>
+                    <MuiDatePicker
+                        label="To"
+                        value={toDayjs(filterDateTo)}
+                        onChange={(value) => setFilterDateTo(toIso(value))}
+                        renderInput={(params) => <TextField {...params} size="small" sx={{ backgroundColor: "white", borderRadius: 1 }} />}
+                    />
+                </Box>
+                <Button
+                    data-testid="filter-reset-button"
+                    variant="outlined"
+                    size="small"
+                    startIcon={<RestartAltIcon />}
+                    onClick={handleResetFilters}
+                    sx={{ color: "white", borderColor: "white" }}
+                >
+                    {"Reset"}
+                </Button>
+            </Box>
 
             <Grid item style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", marginBottom: "20px" }}>
                 <Typography variant="body1" style={{ marginRight: "10px" }} color="white.main">Region:</Typography>
