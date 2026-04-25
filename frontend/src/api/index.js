@@ -74,3 +74,35 @@ export const getActivity = (params) => api.get("activity", params);
 export const getMyProfile = () => api.get("user/me");
 export const updateMyProfile = (payload) => api.put("user/me", payload);
 export const changePassword = (currentPassword, newPassword, confirmPassword) => api.post("user/change-password", { currentPassword, newPassword, confirmPassword });
+
+// M9 — Sales Records CRUD
+export const getSalesRecords = () => api.get("sales-data");
+export const createSalesRecord = (payload) => api.post("sales-data", payload);
+export const updateSalesRecord = (id, payload) => api.put(`sales-data/${id}`, payload);
+export const deleteSalesRecord = (id) => api.delete(`sales-data/${id}`);
+
+// M10 — Threshold Alerts
+export const getAlertRules = () => api.get("alerts");
+export const createAlertRule = (payload) => api.post("alerts", payload);
+export const deleteAlertRule = (id) => api.delete(`alerts/${id}`);
+
+// M11 — Notes
+export const getNotes = () => api.get("notes");
+export const createNote = (payload) => api.post("notes", payload);
+export const deleteNote = (id) => api.delete(`notes/${id}`);
+
+// M14 — Map Data Entries
+export const getMapDataEntries = () => api.get("map-data");
+export const createMapDataEntry = (payload) => api.post("map-data", payload);
+
+// M15 — Reports
+export const getReports = () => api.get("reports");
+export const createReport = (payload) => api.post("reports", payload);
+export const deleteReport = (id) => api.delete(`reports/${id}`);
+
+// M16 — Audit (reuses M5 GET /api/activity)
+export const getAudit = (params) => api.get("activity", params);
+
+// M17 — User Settings
+export const getMySettings = () => api.get("user-settings/me");
+export const updateMySettings = (payload) => api.put("user-settings/me", payload);

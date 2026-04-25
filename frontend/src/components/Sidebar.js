@@ -150,6 +150,76 @@ const Sidebar = ({ isSmall: sidebarIsSmall }) => {
 					</Typography>
 				</Button>
 			)}
+			<Button
+				data-testid="sidebar-sales-data-link"
+				sx={{
+					width: "100%",
+					display: "flex",
+					flexDirection: "row",
+					justifyContent: "flex-start",
+					padding: isSmall ? "8px 0" : "8px 40px 8px 16px",
+					minWidth: "30px",
+					mt: isSmall ? "10px" : 0,
+				}}
+				onClick={() => navigate("/sales-data")}
+			>
+				<Typography align="center" color="white.main" fontSize="medium" ml={isSmall ? 0 : 1} display="flex" alignItems="center" sx={{ textTransform: "capitalize" }}>
+					{isSmall ? "S" : "Sales Data"}
+				</Typography>
+			</Button>
+			<Button
+				data-testid="sidebar-alerts-link"
+				sx={{
+					width: "100%",
+					display: "flex",
+					flexDirection: "row",
+					justifyContent: "flex-start",
+					padding: isSmall ? "8px 0" : "8px 40px 8px 16px",
+					minWidth: "30px",
+					mt: isSmall ? "10px" : 0,
+				}}
+				onClick={() => navigate("/alerts")}
+			>
+				<Typography align="center" color="white.main" fontSize="medium" ml={isSmall ? 0 : 1} display="flex" alignItems="center" sx={{ textTransform: "capitalize" }}>
+					{isSmall ? "!" : "Alerts"}
+				</Typography>
+			</Button>
+			<Button
+				data-testid="sidebar-reports-link"
+				sx={{
+					width: "100%",
+					display: "flex",
+					flexDirection: "row",
+					justifyContent: "flex-start",
+					padding: isSmall ? "8px 0" : "8px 40px 8px 16px",
+					minWidth: "30px",
+					mt: isSmall ? "10px" : 0,
+				}}
+				onClick={() => navigate("/reports")}
+			>
+				<Typography align="center" color="white.main" fontSize="medium" ml={isSmall ? 0 : 1} display="flex" alignItems="center" sx={{ textTransform: "capitalize" }}>
+					{isSmall ? "R" : "Reports"}
+				</Typography>
+			</Button>
+			{isAdmin && (
+				<Button
+					data-testid="sidebar-audit-link"
+					sx={{
+						width: "100%",
+						display: "flex",
+						flexDirection: "row",
+						justifyContent: "flex-start",
+						padding: isSmall ? "8px 0" : "8px 40px 8px 16px",
+						minWidth: "30px",
+						mt: isSmall ? "10px" : 0,
+					}}
+					onClick={() => navigate("/audit")}
+				>
+					<Typography align="center" color="white.main" fontSize="medium" ml={isSmall ? 0 : 1} display="flex" alignItems="center" sx={{ textTransform: "capitalize" }}>
+						{isSmall ? "Au" : "Audit"}
+					</Typography>
+				</Button>
+			)}
 		</div>
 	);
 };

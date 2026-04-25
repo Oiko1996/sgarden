@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
-import { Grid, Typography, Box, Button, MenuItem, Select, Chip, IconButton, TextField } from "@mui/material";
+import useSWR from "swr";
+import { Grid, Typography, Box, Button, MenuItem, Select, Chip, IconButton, TextField, Drawer, Stack, List, ListItem, ListItemText, Divider } from "@mui/material";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
 import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import CloseIcon from "@mui/icons-material/Close";
+import DeleteIcon from "@mui/icons-material/Delete";
 import { DatePicker as MuiDatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from "dayjs";
 import Dropdown from "../components/Dropdown.js";
@@ -12,6 +15,7 @@ import DatePicker from "../components/DatePicker.js";
 import Map from "../components/Map.js";
 import useBookmarksState from "../use-bookmarks-state.js";
 import useFilterPersistence from "../use-filter-persistence.js";
+import { getNotes, createNote, deleteNote } from "../api/index.js";
 
 import colors from "../_colors.scss";
 
@@ -44,6 +48,35 @@ const Dashboard = () => {
         resetFilterMetric();
         resetFilterDateFrom();
         resetFilterDateTo();
+    };
+
+    const [notesOpen, setNotesOpen] = useState(false);
+    const [noteText, setNoteText] = useState("");
+    const [compareOpen, setCompareOpen] = useState(false);
+
+    const { data: notesData, mutate: mutateNotes } = useSWR(notesOpen ? "notes" : null, () => getNotes().catch(() => ({ notes: [] })));
+    const notes = (notesData && notesData.notes) || [];
+
+    const handleAddNote = async () => {
+        const trimmed = noteText.trim();
+        if (!trimmed) return;
+        try {
+            await createNote({ text: trimmed });
+            setNoteText("");
+            mutateNotes();
+        } catch {
+            mutateNotes();
+        }
+    };
+
+    const handleDeleteNote = async (id) => {
+        try {
+            await deleteNote(id);
+        } catch {
+            // re-sync below
+        }
+
+        mutateNotes();
     };
 
     const changePlotData = (fromD, toD) => {
@@ -83,6 +116,19 @@ const Dashboard = () => {
         changePlotData(fromDate, toDate);
     }, [selectedRegion]);
 
+    const halfIndex = Math.max(1, Math.floor(months.length / 2));
+    const previousPeriod = {
+        months: months.slice(0, halfIndex),
+        revenue: data.revenue.slice(0, halfIndex),
+        expenses: data.expenses.slice(0, halfIndex),
+    };
+    const currentPeriod = {
+        months: months.slice(halfIndex),
+        revenue: data.revenue.slice(halfIndex),
+        expenses: data.expenses.slice(halfIndex),
+    };
+    const avg = (arr) => (arr.length ? (arr.reduce((acc, curr) => acc + curr, 0) / arr.length).toFixed(2) : "0.00");
+
     return (
         <Grid container py={2} flexDirection="column">
             <Box display="flex" alignItems="center" gap={1} mb={1} flexWrap="wrap">
@@ -106,7 +152,130 @@ const Dashboard = () => {
                         icon={<BookmarkIcon />}
                     />
                 )}
+                <Box sx={{ flexGrow: 1 }} />
+                <Button
+                    data-testid="notes-toggle-button"
+                    variant="contained"
+                    color="primary"
+                    onClick={() => setNotesOpen((prev) => !prev)}
+                >
+                    {"Notes"}
+                </Button>
+                <Button
+                    data-testid="compare-toggle"
+                    variant="contained"
+                    color="secondary"
+                    onClick={() => setCompareOpen((prev) => !prev)}
+                >
+                    {compareOpen ? "Hide Compare" : "Compare"}
+                </Button>
             </Box>
+
+            {compareOpen && (
+                <Grid container spacing={2} mb={2}>
+                    <Grid item xs={12} display="flex" justifyContent="flex-end">
+                        <Button
+                            data-testid="compare-close"
+                            variant="outlined"
+                            color="secondary"
+                            startIcon={<CloseIcon />}
+                            onClick={() => setCompareOpen(false)}
+                            sx={{ color: "white", borderColor: "white" }}
+                        >
+                            {"Close Compare"}
+                        </Button>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                        <Box data-testid="compare-panel-left" p={2} sx={{ background: colors.greyDark, borderRadius: 1 }}>
+                            <Typography variant="h6" color="primary.main" gutterBottom>
+                                {"Previous Period"}
+                            </Typography>
+                            <Typography variant="body2" color="white.main">
+                                {`Range: ${previousPeriod.months[0] || "-"} → ${previousPeriod.months[previousPeriod.months.length - 1] || "-"}`}
+                            </Typography>
+                            <Typography variant="body2" color="white.main">
+                                {`Avg Revenue: ${avg(previousPeriod.revenue)}%`}
+                            </Typography>
+                            <Typography variant="body2" color="white.main">
+                                {`Avg Expenses: ${avg(previousPeriod.expenses)}%`}
+                            </Typography>
+                        </Box>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                        <Box data-testid="compare-panel-right" p={2} sx={{ background: colors.greyDark, borderRadius: 1 }}>
+                            <Typography variant="h6" color="primary.main" gutterBottom>
+                                {"Current Period"}
+                            </Typography>
+                            <Typography variant="body2" color="white.main">
+                                {`Range: ${currentPeriod.months[0] || "-"} → ${currentPeriod.months[currentPeriod.months.length - 1] || "-"}`}
+                            </Typography>
+                            <Typography variant="body2" color="white.main">
+                                {`Avg Revenue: ${avg(currentPeriod.revenue)}%`}
+                            </Typography>
+                            <Typography variant="body2" color="white.main">
+                                {`Avg Expenses: ${avg(currentPeriod.expenses)}%`}
+                            </Typography>
+                        </Box>
+                    </Grid>
+                </Grid>
+            )}
+
+            <Drawer
+                anchor="right"
+                open={notesOpen}
+                onClose={() => setNotesOpen(false)}
+                PaperProps={{ sx: { width: { xs: "100%", sm: 380 }, p: 2 } }}
+            >
+                <Box data-testid="notes-panel" role="region" aria-label="Notes">
+                    <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                        <Typography variant="h6">{"Notes"}</Typography>
+                        <IconButton onClick={() => setNotesOpen(false)} aria-label="Close notes">
+                            <CloseIcon />
+                        </IconButton>
+                    </Box>
+                    <Stack direction="row" spacing={1} mb={2}>
+                        <TextField
+                            data-testid="notes-add-input"
+                            fullWidth
+                            size="small"
+                            placeholder="Write a note..."
+                            value={noteText}
+                            onChange={(event) => setNoteText(event.target.value)}
+                            inputProps={{ "aria-label": "New note" }}
+                        />
+                        <Button
+                            data-testid="notes-add-submit"
+                            variant="contained"
+                            onClick={handleAddNote}
+                        >
+                            {"Add"}
+                        </Button>
+                    </Stack>
+                    <Divider />
+                    <List dense>
+                        {notes.length === 0 && (
+                            <ListItem>
+                                <ListItemText primary="No notes yet" />
+                            </ListItem>
+                        )}
+                        {notes.map((note) => (
+                            <ListItem
+                                key={note._id}
+                                secondaryAction={(
+                                    <IconButton edge="end" aria-label="delete" onClick={() => handleDeleteNote(note._id)}>
+                                        <DeleteIcon fontSize="small" />
+                                    </IconButton>
+                                )}
+                            >
+                                <ListItemText
+                                    primary={note.text}
+                                    secondary={note.createdAt ? new Date(note.createdAt).toLocaleString() : ""}
+                                />
+                            </ListItem>
+                        ))}
+                    </List>
+                </Box>
+            </Drawer>
 
             <Box
                 display="flex"
